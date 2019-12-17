@@ -1,0 +1,59 @@
+package main
+
+import (
+       "fmt"
+       "sync"
+       "strings"
+       )
+
+func worker (id int, jobs <-chan string, results chan<- string, wg *sync.WaitGroup) {
+
+     for j := range jobs {
+     	 //Example Worker Function
+     	 fmt.Printf("Worker %d starting.\n", id)
+     	 fmt.Printf("Worker %d completed.\n", id)
+     	 var out = strings.ToUpper(j)
+	 
+	 results <-out
+	 }
+
+     wg.Done()
+}
+
+
+func main () {
+
+     var jobsinit [5]string
+     jobsinit[0] = "test1"
+     jobsinit[1] = "test2"
+     jobsinit[2] = "test3"
+     jobsinit[3] = "test4"
+     jobsinit[4] = "test5"
+
+
+     var numworkers=3
+
+     jobs := make(chan string)
+     results := make(chan string)
+
+     var wg sync.WaitGroup
+
+     for i := 1; i<=numworkers; i++ {
+     	 wg.Add(1)
+	 go worker(i, jobs, results, &wg)
+     }
+
+     for j := 0; j<len(jobsinit); j++ {
+     	 jobs <- jobsinit[j]
+     }
+     close(jobs)
+
+
+     wg.Wait()
+     
+     fmt.Println("Results:")
+     for out := 0; out<len(jobsinit); out++ {
+     	 <-results
+     }
+     
+}
